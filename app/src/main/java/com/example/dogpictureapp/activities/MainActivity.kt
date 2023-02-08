@@ -1,7 +1,8 @@
-package com.example.dogpictureapp
+package com.example.dogpictureapp.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.dogpictureapp.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
