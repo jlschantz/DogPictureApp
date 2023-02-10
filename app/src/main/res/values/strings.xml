@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Dog Pictures</string>
     <string name="no_results">No Results</string>
+    <string name="search">Search</string>
 </resources>

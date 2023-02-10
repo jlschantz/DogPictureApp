@@ -2,7 +2,12 @@ package com.example.dogpictureapp.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dogpictureapp.R
@@ -10,7 +15,6 @@ import com.example.dogpictureapp.adapters.DogPictureListAdapter
 import com.example.dogpictureapp.databinding.ActivityMainBinding
 import com.example.dogpictureapp.viewmodels.DogViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -18,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     private var binding: ActivityMainBinding? = null
     private val dogViewModel: DogViewModel by viewModels()
+    private val dogPictureListAdapter = DogPictureListAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +31,6 @@ class MainActivity : AppCompatActivity() {
 
         title = getString(R.string.app_name)
 
-        val dogPictureListAdapter = DogPictureListAdapter()
-
         binding?.apply {
             pictureRecyclerView.apply {
                 adapter = dogPictureListAdapter
@@ -35,10 +38,43 @@ class MainActivity : AppCompatActivity() {
                 setHasFixedSize(true)
             }
 
-            lifecycleScope.launchWhenStarted {
-                dogViewModel.picturesList.collect { list ->
-                    dogPictureListAdapter.submitList(list)
-                }
+            setupMenu()
+        }
+    }
+
+    private fun setupMenu(){
+        addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_search, menu)
+
+                val searchItem = menu.findItem(R.id.action_search)
+                val searchView = searchItem?.actionView as SearchView
+
+                searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+                    override fun onQueryTextSubmit(query: String?): Boolean {
+                        if(!query.isNullOrBlank()){
+                            searchForType(query)
+                            searchView.clearFocus()
+                        }
+                        return true
+                    }
+
+                    override fun onQueryTextChange(newText: String?): Boolean {
+                        return true
+                    }
+                })
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return true
+            }
+        })
+    }
+
+    private fun searchForType(type: String){
+        lifecycleScope.launch {
+            dogViewModel.getDogPicturesByType(type).collect { list ->
+                dogPictureListAdapter.submitList(list)
             }
         }
     }
