@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuProvider
@@ -15,7 +17,9 @@ import com.example.dogpictureapp.adapters.DogPictureListAdapter
 import com.example.dogpictureapp.databinding.ActivityMainBinding
 import com.example.dogpictureapp.viewmodels.DogViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -74,7 +78,14 @@ class MainActivity : AppCompatActivity() {
     private fun searchForType(type: String){
         lifecycleScope.launch {
             dogViewModel.getDogPicturesByType(type).collect { list ->
-                dogPictureListAdapter.submitList(list)
+                withContext(Dispatchers.Main) {
+                    dogPictureListAdapter.submitList(list)
+
+                    binding?.apply {
+                        pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
+                        textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
+                    }
+                }
             }
         }
     }
