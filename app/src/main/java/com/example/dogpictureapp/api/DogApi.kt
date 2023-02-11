@@ -1,5 +1,6 @@
 package com.example.dogpictureapp.api
 
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -9,5 +10,5 @@ interface DogApi {
     }
 
     @GET("breed/{type}/images")
-    suspend fun getDogPicturesByType(@Path("type") type: String): DogPictureResponse
+    suspend fun getDogPicturesByType(@Path("type") type: String): Response<DogPictureResponse>
 }

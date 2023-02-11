@@ -7,6 +7,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuProvider
@@ -14,12 +15,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dogpictureapp.R
 import com.example.dogpictureapp.adapters.DogPictureListAdapter
+import com.example.dogpictureapp.api.ApiResource
 import com.example.dogpictureapp.databinding.ActivityMainBinding
 import com.example.dogpictureapp.viewmodels.DogViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -41,12 +41,12 @@ class MainActivity : AppCompatActivity() {
                 layoutManager = LinearLayoutManager(this@MainActivity)
                 setHasFixedSize(true)
             }
-
-            setupMenu()
         }
+
+        setupMenu()
     }
 
-    private fun setupMenu(){
+    private fun setupMenu() {
         addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_search, menu)
@@ -75,15 +75,27 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun searchForType(type: String){
-        lifecycleScope.launch {
-            dogViewModel.getDogPicturesByType(type).collect { list ->
-                withContext(Dispatchers.Main) {
-                    dogPictureListAdapter.submitList(list)
+    private fun searchForType(type: String) {
+        binding?.apply {
+            lifecycleScope.launch {
+                dogViewModel.getDogPicturesByType(type).collect { resource ->
+                    when (resource) {
+                        is ApiResource.Success -> {
+                            progressRecyclerView.visibility = GONE
+                            resource.data?.let { list ->
+                                dogPictureListAdapter.submitList(list)
 
-                    binding?.apply {
-                        pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
-                        textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
+                                pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
+                                textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
+                            }
+                        }
+                        is ApiResource.Error -> {
+                            progressRecyclerView.visibility = GONE
+                            Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
+                        }
+                        is ApiResource.Loading -> {
+                            progressRecyclerView.visibility = VISIBLE
+                        }
                     }
                 }
             }
