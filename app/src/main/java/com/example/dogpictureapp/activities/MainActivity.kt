@@ -19,7 +19,9 @@ import com.example.dogpictureapp.api.ApiResource
 import com.example.dogpictureapp.databinding.ActivityMainBinding
 import com.example.dogpictureapp.viewmodels.DogViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -76,25 +78,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun searchForType(type: String) {
-        binding?.apply {
-            lifecycleScope.launch {
-                dogViewModel.getDogPicturesByType(type).collect { resource ->
-                    when (resource) {
-                        is ApiResource.Success -> {
-                            progressRecyclerView.visibility = GONE
-                            resource.data?.let { list ->
-                                dogPictureListAdapter.submitList(list)
+        lifecycleScope.launch(Dispatchers.IO) {
+            dogViewModel.getDogPicturesByType(type).collect { resource ->
+                withContext(Dispatchers.Main) {
+                    binding?.apply {
+                        when (resource) {
+                            is ApiResource.Success -> {
+                                progressRecyclerView.visibility = GONE
+                                resource.data?.let { list ->
+                                    dogPictureListAdapter.submitList(list)
 
-                                pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
-                                textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
+                                    pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
+                                    textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
+                                } ?: Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
                             }
-                        }
-                        is ApiResource.Error -> {
-                            progressRecyclerView.visibility = GONE
-                            Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiResource.Loading -> {
-                            progressRecyclerView.visibility = VISIBLE
+                            is ApiResource.Error -> {
+                                progressRecyclerView.visibility = GONE
+                                Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
+                            }
+                            is ApiResource.Loading -> {
+                                progressRecyclerView.visibility = VISIBLE
+                            }
                         }
                     }
                 }
