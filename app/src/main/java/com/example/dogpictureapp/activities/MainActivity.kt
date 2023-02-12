@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dogpictureapp.R
 import com.example.dogpictureapp.adapters.DogPictureListAdapter
-import com.example.dogpictureapp.api.ApiResource
+import com.example.dogpictureapp.api.ResultState.*
 import com.example.dogpictureapp.databinding.ActivityMainBinding
 import com.example.dogpictureapp.viewmodels.DogViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     binding?.apply {
                         when (resource) {
-                            is ApiResource.Success -> {
+                            is Success -> {
                                 progressRecyclerView.visibility = GONE
                                 resource.data?.let { list ->
                                     dogPictureListAdapter.submitList(list)
@@ -92,11 +92,11 @@ class MainActivity : AppCompatActivity() {
                                     textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
                                 } ?: Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
                             }
-                            is ApiResource.Error -> {
+                            is Error -> {
                                 progressRecyclerView.visibility = GONE
                                 Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
                             }
-                            is ApiResource.Loading -> {
+                            is Loading -> {
                                 progressRecyclerView.visibility = VISIBLE
                             }
                         }
