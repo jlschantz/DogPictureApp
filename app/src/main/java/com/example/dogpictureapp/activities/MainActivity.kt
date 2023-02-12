@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                 val searchItem = menu.findItem(R.id.action_search)
                 val searchView = searchItem?.actionView as SearchView
 
+                searchView.queryHint = getString(R.string.search_by_dog_breed)
                 searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
                     override fun onQueryTextSubmit(query: String?): Boolean {
                         if(!query.isNullOrBlank()){
@@ -90,11 +91,11 @@ class MainActivity : AppCompatActivity() {
 
                                     pictureRecyclerView.visibility = if (list.isNotEmpty()) VISIBLE else GONE
                                     textRecyclerView.visibility = if (list.isNotEmpty()) GONE else VISIBLE
-                                } ?: Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
+                                } ?: Toast.makeText(this@MainActivity, getString(R.string.an_error_has_occurred), Toast.LENGTH_SHORT).show()
                             }
                             is Error -> {
                                 progressRecyclerView.visibility = GONE
-                                Toast.makeText(this@MainActivity, resource.error, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@MainActivity, resource.error ?: getString(R.string.an_error_has_occurred), Toast.LENGTH_SHORT).show()
                             }
                             is Loading -> {
                                 progressRecyclerView.visibility = VISIBLE
